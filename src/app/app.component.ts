@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +6,39 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.less']
 })
 export class AppComponent {
-  title = 'app';
+
+  @ViewChild('vs') vs: ElementRef;
+
+  private items = [];
+  private dragElement: any;
+
+  constructor() {
+    this.generateVirtualItems(6);
+  }
+
+  generateVirtualItems(amount: number) {
+    function randomColor() { return 'rgb(' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ')'; }
+    for (let i = 0; i < amount; i++)
+      this.items.push({ index: i + 1, color: randomColor() });
+  }
+
+  dragStart(index) {
+    this.dragElement = this.items[index.start];
+  }
+
+  dragEnd(index) {
+    this.move(this.items, index.start, index.end);
+  }
+
+  commas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  move(array: any, old_index: number, new_index: number) {
+    if (old_index < 0 || new_index > array.length - 1 || old_index == new_index) return;
+    let obj = array.splice(new_index, 1, array[old_index])[0];
+    array.splice(old_index, 1);
+    new_index += (old_index > new_index) ? 1 : -1;
+    array.splice(new_index, 0, obj);
+  }
 }

@@ -54,7 +54,7 @@ export class VirtualScrollComponent implements OnInit {
     @HostBinding('class.dragging') isDragging: boolean = false;
 
     private lastTouch: any;
-    private dragInterval: NodeJS.Timer;
+    private dragInterval: any;
     private originalElement: any;
     private dragElement: any;
     private scrollContainerWidth: number;
@@ -168,7 +168,8 @@ export class VirtualScrollComponent implements OnInit {
         if (this.originalElement)
             this.originalElement.style.cssText = this.cssText;
         this.isDragging = false;
-        this.getDropIndex(this.getPoint(e));
+        let point = this.getPoint(e);
+        this.getDropIndex(point);
         this.removeTouchListeners();
         clearInterval(this.dragInterval);
         this.removeDragElement();
@@ -395,9 +396,10 @@ export class VirtualScrollComponent implements OnInit {
                 break;
             }
         }
-        if (!target) {
-            if (this.dragInsideContainer && this.index.end == this.size)
-                this.reorderIndex.end = this.size;
+        if (!target && this.dragInsideContainer) {
+            this.reorderIndex.target = this.size;
+            this.reorderIndex.end = this.size - 1;
+            this.reorderIndex.accuracy = 0.0;
             return;
         }
 
@@ -407,16 +409,27 @@ export class VirtualScrollComponent implements OnInit {
         let targetOffsetTop = $(target).offset().top
         let targetOffsetCenterY = targetOffsetTop + (this.rowHeight / 2) - this.scrollContainerTop;
         let dragOffsetCenterY = dragOffsetTop + (this.rowHeight / 2) - this.scrollContainerTop;
-        
-        if (dragOffsetCenterY > targetOffsetCenterY)
-            this.reorderIndex.end = Math.min(this.reorderIndex.target + 1, this.size - 1);
+
+        this.reorderIndex.end = this.reorderIndex.target;
+
+        if (dragOffsetCenterY > targetOffsetCenterY) {
+            this.reorderIndex.end = Math.min(this.reorderIndex.target + (this.reorderIndex.start > this.reorderIndex.target ? 1 : 0), this.size - 1);
+        } else if (dragOffsetCenterY < targetOffsetCenterY) {
+            this.reorderIndex.end = Math.max(this.reorderIndex.target - (this.reorderIndex.start < this.reorderIndex.target ? 1 : 0), 0);
+        }
 
         // Distance between center points of target and reordered element
         let distance = Math.abs(targetOffsetCenterY - dragOffsetCenterY);
         let percent = Math.round((100 - ((distance / this.rowHeight) * 100)) * 10) / 10;
-        this.reorderIndex.targetAccuracy = percent;
+        this.reorderIndex.accuracy = percent;
 
-        this.reorderIndex.end = this.reorderIndex.end == null ? this.reorderIndex.target : this.reorderIndex.end;
+        // Ignore reordering when an adjacent row is dropped directly ontop of another
+        if (this.reorderIndex.accuracy == 100) {
+            if (this.reorderIndex.target > 0 && this.reorderIndex.target < this.size - 1) {
+                if (Math.abs(this.reorderIndex.start - this.reorderIndex.target) == 1)
+                    this.reorderIndex.end = this.reorderIndex.start;
+            }
+        }
     }
 
     /**
@@ -457,7 +470,7 @@ export class VirtualScrollComponent implements OnInit {
  * start: the start index of the virtual array of an array of items. (This is the start of your array splice)
  * end: the end index of the virtual array of an array of items. (This is the end of your array splice)
  * target: the index in the virtual array that the reordered row is over.
- * targetAccuracy: the % accuracy that the reordered row is over the target row. (100% is directly over, 90% is 10% up or down from the center of the row.)
+ * accuracy: the % accuracy that the reordered row is over the target row. (100% is directly over, 90% - is 10% up or down from the center of the row.)
  */
 export interface Index {
     first?: number; // Visible
@@ -465,7 +478,7 @@ export interface Index {
     start?: number; // Array Index
     end?: number; // Array Index
     target?: number; // Target Index
-    targetAccuracy?: number; // Percent
+    accuracy?: number; // Percent
 }
 
 export enum Direction {
