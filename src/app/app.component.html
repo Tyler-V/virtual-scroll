@@ -1,14 +1,15 @@
-<div class="title">
-    Displaying {{vs.displayedItems}} of {{vs.index?.end - vs.index?.start}} items ({{commas(vs.index?.start + 1)}} - {{commas(vs.index?.end)}}) of total {{commas(vs.size)}} items
-</div>
-
-<div class="center">
-    <virtual-scroll #vs [size]="items.length" [rowHeight]="50" (dragStart)="dragStart($event)" (dragEnd)="dragEnd($event)">
-        <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end)">
-            <div class="row" [style.background-color]="item.color">
-                <div class="item">{{item.index}}</div>
-                <div class="drag-handle"></div>
-            </div>
-        </ng-container>
-    </virtual-scroll>
+<div class="container">
+    <div class="virtual-container">
+        <div class="label">
+            Displaying {{vs.displayedItems}} of {{vs.index?.end - vs.index?.start}} items ({{vs.index?.start + 1}} - {{vs.index?.end}}) of total {{vs.size}} items
+        </div>
+        <virtual-scroll #vs [size]="items.length" [rowHeight]="50" (dragEnd)="dragEnd($event)">
+            <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end)">
+                <div class="row" [style.background-color]="item.color">
+                    <div class="item">{{item.index}}</div>
+                    <div class="drag-handle"></div>
+                </div>
+            </ng-container>
+        </virtual-scroll>
+    </div>
 </div>

@@ -1,25 +1,32 @@
-.title {
-  position: relative;
-  top: 50px;
-  font-size: 18px;
+.container {
+  display: flex;
+}
+.container .virtual-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.container .virtual-container .label {
+  font-size: 16px;
   font-weight: bold;
   text-align: center;
+  height: 50px;
+  line-height: 50px;
 }
-.center {
-  position: relative;
-  left: 312px;
-  top: 75px;
-  border: 1px solid gray;
+.container .virtual-container .virtual-scroll {
   height: 500px;
   width: 400px;
+  border: 1px solid gray;
 }
-.row {
+.container .virtual-container .virtual-scroll .row {
   display: flex;
   align-content: flex-start;
   height: 50px;
   line-height: 50px;
 }
-.row .item {
+.container .virtual-container .virtual-scroll .row .item {
   width: 100%;
   color: #FFFFFF;
   font-size: 20px;
@@ -28,7 +35,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
-.row .drag-handle {
+.container .virtual-container .virtual-scroll .row .drag-handle {
   position: absolute;
   right: 0;
   height: 50px;

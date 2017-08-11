@@ -1,42 +1,47 @@
-    .title {
-        position: relative;
-        top: 50px;
-        font-size: 18px;
-        font-weight: bold;
-        text-align: center;
-    }
-    
-    .center {
-        position: relative;
-        left: 312px;
-        top: 75px;
-        border: 1px solid gray;
-        height: 500px;
-        width: 400px;
-    }
-    
-    .row {
+    .container {
         display: flex;
-        align-content: flex-start;
-        height: 50px;
-        line-height: 50px;
-        .item {
+        .virtual-container {
             width: 100%;
-            color: #FFFFFF;
-            font-size: 20px;
-            text-align: center;
-            font-weight: bold;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-        }
-        .drag-handle {
-            position: absolute;
-            right: 0;
-            height: 50px;
-            width: 50px;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACBVGfHAAAAD1BMVEUAAAAEBwcAAAAICAgEBwdIVJjzAAAABHRSTlMAvxAgDD3tLgAAAClJREFUKM9jgAAmEUcFBmTA6OIigCLA4uLigC7gjFMLwtBBAEY9R77nAOJDCzKRXnfNAAAAAElFTkSuQmCC');
-            background-position: ~'calc(100% - 15px)' center;
-            background-repeat: no-repeat;
-            background-size: 16px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            .label {
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+                height: 50px;
+                line-height: 50px;
+            }
+            .virtual-scroll {
+                height: 500px;
+                width: 400px;
+                border: 1px solid gray;
+                .row {
+                    display: flex;
+                    align-content: flex-start;
+                    height: 50px;
+                    line-height: 50px;
+                    .item {
+                        width: 100%;
+                        color: #FFFFFF;
+                        font-size: 20px;
+                        text-align: center;
+                        font-weight: bold;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                    }
+                    .drag-handle {
+                        position: absolute;
+                        right: 0;
+                        height: 50px;
+                        width: 50px;
+                        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACBVGfHAAAAD1BMVEUAAAAEBwcAAAAICAgEBwdIVJjzAAAABHRSTlMAvxAgDD3tLgAAAClJREFUKM9jgAAmEUcFBmTA6OIigCLA4uLigC7gjFMLwtBBAEY9R77nAOJDCzKRXnfNAAAAAElFTkSuQmCC');
+                        background-position: ~'calc(100% - 15px)' center;
+                        background-repeat: no-repeat;
+                        background-size: 16px 16px;
+                    }
+                }
+            }
         }
     }

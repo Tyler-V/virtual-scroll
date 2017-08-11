@@ -9,11 +9,10 @@ export class AppComponent {
 
   @ViewChild('vs') vs: ElementRef;
 
-  private items = [];
-  private dragElement: any;
+  items = [];
 
   constructor() {
-    this.generateVirtualItems(6);
+    this.generateVirtualItems(500000);
   }
 
   generateVirtualItems(amount: number) {
@@ -22,16 +21,8 @@ export class AppComponent {
       this.items.push({ index: i + 1, color: randomColor() });
   }
 
-  dragStart(index) {
-    this.dragElement = this.items[index.start];
-  }
-
   dragEnd(index) {
     this.move(this.items, index.start, index.end);
-  }
-
-  commas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   move(array: any, old_index: number, new_index: number) {
