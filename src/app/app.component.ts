@@ -12,7 +12,7 @@ export class AppComponent {
   items = [];
 
   constructor() {
-    this.generateVirtualItems(500000);
+    this.generateVirtualItems(100000);
   }
 
   generateVirtualItems(amount: number) {
