@@ -12,13 +12,17 @@ export class AppComponent {
   items = [];
 
   constructor() {
-    this.generateVirtualItems(100000);
+    this.generateVirtualItems(500000);
   }
 
   generateVirtualItems(amount: number) {
     function randomColor() { return 'rgb(' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ', ' + Math.round(Math.random() * 255) + ')'; }
     for (let i = 0; i < amount; i++)
       this.items.push({ index: i + 1, color: randomColor() });
+  }
+
+  numberWithCommas(n: number) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   dragEnd(index) {

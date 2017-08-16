@@ -1,12 +1,15 @@
 <div class="container">
     <div class="virtual-container">
-        <div class="label">
-            Displaying {{vs.displayedItems}} of {{vs.index?.end - vs.index?.start}} items ({{vs.index?.start + 1}} - {{vs.index?.end}}) of total {{vs.size}} items
+        <div class="title">
+            Virtual Scroll
+        </div>
+        <div class="header">
+            Displaying {{vs.displayedItems}} rows ({{numberWithCommas(vs.index?.first + 1)}} - {{numberWithCommas(vs.index?.last)}}) of {{numberWithCommas(vs.size)}} items
         </div>
         <virtual-scroll #vs [size]="items.length" [rowHeight]="50" (dragEnd)="dragEnd($event)">
-            <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end)">
-                <div class="row" [style.background-color]="item.color">
-                    <div class="item no-select">{{item.index}}</div>
+            <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end); let first = first;">
+                <div class="row" [style.background-color]="item.color" [class.first]="first">
+                    <div class="item no-select">{{numberWithCommas(item.index)}}</div>
                     <div class="drag-handle"></div>
                 </div>
             </ng-container>

@@ -6,30 +6,44 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            .label {
-                font-size: 16px;
-                font-weight: bold;
+            .title {
+                font-size: 60px;
                 text-align: center;
                 height: 50px;
                 line-height: 50px;
+                font-family: 'Caveat Brush', cursive;
+            }
+            .header {
+                font-size: 18px;
+                text-align: center;
+                height: 50px;
+                line-height: 50px;
+                font-family: 'Caveat Brush', cursive;
             }
             .virtual-scroll {
                 height: 500px;
                 width: 400px;
-                border: 1px solid gray;
+                border: 1px solid black;
+                .vs-drag-source {}
+                .vs-drag-transit {
+                    border: none !important;
+                }
                 .row {
                     display: flex;
                     align-content: flex-start;
                     height: 50px;
                     line-height: 50px;
+                    box-sizing: border-box;
+                    border-top: 1px solid;
+                    &.first {
+                        border-top: none !important;
+                    }
                     .item {
+                        height: 50px;
                         width: 100%;
-                        color: #FFFFFF;
-                        font-size: 20px;
+                        font-size: 12px;
                         text-align: center;
-                        font-weight: bold;
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+                        font-family: 'Oswald', sans-serif;
                     }
                     .drag-handle {
                         position: absolute;

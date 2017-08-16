@@ -8,32 +8,45 @@
   justify-content: center;
   align-items: center;
 }
-.container .virtual-container .label {
-  font-size: 16px;
-  font-weight: bold;
+.container .virtual-container .title {
+  font-size: 60px;
   text-align: center;
   height: 50px;
   line-height: 50px;
+  font-family: 'Caveat Brush', cursive;
+}
+.container .virtual-container .header {
+  font-size: 18px;
+  text-align: center;
+  height: 50px;
+  line-height: 50px;
+  font-family: 'Caveat Brush', cursive;
 }
 .container .virtual-container .virtual-scroll {
   height: 500px;
   width: 400px;
-  border: 1px solid gray;
+  border: 1px solid black;
+}
+.container .virtual-container .virtual-scroll .vs-drag-transit {
+  border: none !important;
 }
 .container .virtual-container .virtual-scroll .row {
   display: flex;
   align-content: flex-start;
   height: 50px;
   line-height: 50px;
+  box-sizing: border-box;
+  border-top: 1px solid;
+}
+.container .virtual-container .virtual-scroll .row.first {
+  border-top: none !important;
 }
 .container .virtual-container .virtual-scroll .row .item {
+  height: 50px;
   width: 100%;
-  color: #FFFFFF;
-  font-size: 20px;
+  font-size: 12px;
   text-align: center;
-  font-weight: bold;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  font-family: 'Oswald', sans-serif;
 }
 .container .virtual-container .virtual-scroll .row .drag-handle {
   position: absolute;
