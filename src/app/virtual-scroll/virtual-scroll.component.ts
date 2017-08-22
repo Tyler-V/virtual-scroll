@@ -338,8 +338,8 @@ export class VirtualScrollComponent implements OnInit {
    */
   private scroll(direction: Direction) {
     let scrollTop = this.elementRef.nativeElement.scrollTop + (direction == Direction.Down ? 10 : -10);
-    if(scrollTop < 0) scrollTop = 0;
-    if(scrollTop > this.elementRef.nativeElement.scrollHeight) scrollTop = this.elementRef.nativeElement.scrollHeight;
+    if (scrollTop < 0) scrollTop = 0;
+    if (scrollTop > this.elementRef.nativeElement.scrollHeight) scrollTop = this.elementRef.nativeElement.scrollHeight;
     this.elementRef.nativeElement.scrollTop = scrollTop;
   }
 
@@ -359,8 +359,10 @@ export class VirtualScrollComponent implements OnInit {
       offsetTop += this.rowHeight;
     }
 
-    this.renderer2.setStyle(this.dragBorderElement, 'visibility', 'visible');
-    this.renderer2.setStyle(this.dragBorderElement, 'transform', 'translate3d(0px, ' + offsetTop + 'px, 0px)');
+    if (this.dragBorderElement) {
+      this.renderer2.setStyle(this.dragBorderElement, 'visibility', 'visible');
+      this.renderer2.setStyle(this.dragBorderElement, 'transform', 'translate3d(0px, ' + offsetTop + 'px, 0px)');
+    }
   }
 
   private removeDragElement() {
