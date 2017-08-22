@@ -40,6 +40,7 @@ export class VirtualScrollComponent implements OnInit {
   /** Options */
   @Input() virtualPadding: number = 3; // How many additional virtual items should be padded to the top/bottom for visual/UI purposes
   @Input() draggable: string = 'drag'; // The class name of the layer that you want to become draggable on touch
+  @Input() dragBorder: boolean = true; // Styled by '.vs-drag-border' class
   @Input() dragInsideContainer: boolean = true; // Restricts transit layer to remain inside the container
   @Input() verticalDrag: boolean = true; // Allows dragging the transit layer vertically
   @Input() horizontalDrag: boolean = false; // Allows dragging the transit layer horizontally
@@ -56,7 +57,6 @@ export class VirtualScrollComponent implements OnInit {
   @HostBinding('class.dragging') isDragging: boolean = false;
 
   private lastTouch: any;
-  private dragInterval: any;
   private originalElement: any;
   private dragElement: Node;
   private scrollContainerWidth: number;
@@ -80,14 +80,12 @@ export class VirtualScrollComponent implements OnInit {
   private onDragEndListener: Function;
   private onDragCancelListener: Function;
 
+  private onStart: boolean = true;
   private previousStart: number;
   private previousEnd: number;
   private currentStart: number;
-  private onStart: boolean = true;
-
-  private dragRaf: any;
-  private scrollRaf: any;
   private scrollInterval: any;
+  private dragBorderElement: any;
 
   public scrollHeight: number;
   public topPadding: number;
@@ -101,13 +99,25 @@ export class VirtualScrollComponent implements OnInit {
     this.onDragStartListener = this.renderer2.listen(this.contentElementRef.nativeElement, 'touchstart', (e) => this.onDragStart(e));
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    this.previousStart = undefined;
+    this.previousEnd = undefined;
+    this.refresh();
+  }
+
+  ngOnDestroy() {
+    this.onScrollListener();
+    this.onDragStartListener();
+    this.removeTouchListeners();
+  }
+
   @HostListener('mousedown', ['$event'])
   private onDragStart(e: TouchEvent | MouseEvent) {
     let target: any = e.target;
     if (target == null) return;
     if (target.className.indexOf(this.draggable) == -1) return;
-    this.lastTouch = this.getPoint(e);
 
+    this.lastTouch = this.getPoint(e);
     this.isDragging = true;
 
     this.scrollContainerWidth = this.elementRef.nativeElement.clientWidth;
@@ -127,19 +137,27 @@ export class VirtualScrollComponent implements OnInit {
     }
     this.cssText = this.originalElement.style.cssText;
 
-    this.renderer2.addClass(this.originalElement, 'vs-drag-source');
-    this.renderer2.setStyle(this.originalElement, 'box-shadow', 'inset 0 20px 10px -20px rgba(0,0,0,0.8)');
-    this.renderer2.setStyle(this.originalElement, 'background-color', '#D7D7D7');
+    this.renderer2.addClass(this.originalElement, "vs-drag-source");
+    this.renderer2.setStyle(this.originalElement, "box-shadow", "inset 0 20px 10px -20px rgba(0,0,0,0.8)");
+    this.renderer2.setStyle(this.originalElement, "background-color", "#D7D7D7");
 
-    this.renderer2.addClass(this.dragElement, 'vs-drag-transit');
-    this.renderer2.setStyle(this.dragElement, 'position', 'absolute');
-    this.renderer2.setStyle(this.dragElement, 'width', 'inherit');
+    this.renderer2.addClass(this.dragElement, "vs-drag-transit");
+    this.renderer2.setStyle(this.dragElement, "position", "absolute");
+    this.renderer2.setStyle(this.dragElement, "opacity", "0.9");
+    this.renderer2.setStyle(this.dragElement, "width", "inherit");
     this.renderer2.setStyle(this.dragElement, "box-shadow", "0px 7px 7px -4px rgba(0, 0, 0, 0.5)");
-
     this.transit.nativeElement.appendChild(this.dragElement);
+
+    let el = this.renderer2.createElement("div");
+    this.renderer2.addClass(el, "vs-drag-border");
+    this.renderer2.setStyle(el, "position", "absolute");
+    this.renderer2.setStyle(el, "width", "inherit");
+    this.renderer2.setStyle(el, "border-top", "2px solid red");
+    this.dragBorderElement = this.transit.nativeElement.appendChild(el);
 
     this.initialOffsetX = this.lastTouch.clientX - $(this.originalElement).offset().left;
     this.initialOffsetY = this.lastTouch.clientY - $(this.originalElement).offset().top;
+
     this.drag();
 
     this.reorderIndex = {
@@ -159,48 +177,27 @@ export class VirtualScrollComponent implements OnInit {
     let point = this.getPoint(e);
     if (this.lastTouch == point) return;
     this.lastTouch = this.getPoint(e);
+    this.dragging.emit(this.reorderIndex);
+    this.getDropIndex(this.lastTouch);
 
-    cancelAnimationFrame(this.dragRaf);
-    this.dragRaf = this.ngZone.runOutsideAngular(() => {
-      return requestAnimationFrame(this.drag.bind(this));
-    });
+    requestAnimationFrame(this.drag.bind(this));
 
-    this.clearInterval(this.scrollInterval);
+    if (this.scrollInterval)
+      this.clearInterval(this.scrollInterval);
     let direction = this.getScrollDirection(this.lastTouch);
     if (direction != null) {
-      cancelAnimationFrame(this.scrollRaf);
       this.scrollInterval = this.requestInterval(() => {
-        this.scrollRaf = this.ngZone.runOutsideAngular(() => {
-          requestAnimationFrame(() => this.scroll(direction));
-        });
+        this.scroll(direction);
       });
     }
 
-    event.preventDefault();
-  }
-
-  private requestInterval(fn: any, delay: number = 0) {
-    var start = Date.now();
-    var data: any = {};
-    data.id = requestAnimationFrame(loop);
-    return data;
-    function loop() {
-      data.id = requestAnimationFrame(loop);
-      if (Date.now() - start >= delay) {
-        fn();
-        start = Date.now();
-      }
-    }
-  }
-
-  private clearInterval(data) {
-    if (data == null || data.id == null) return;
-    cancelAnimationFrame(data.id);
+    e.preventDefault();
   }
 
   private drag(): any {
     let offsetClientX = this.lastTouch.clientX - this.initialOffsetX - this.scrollContainerLeft;
     let offsetClientY = this.lastTouch.clientY - this.initialOffsetY - this.scrollContainerTop;
+
     if (this.dragInsideContainer) {
       if (offsetClientY <= 0) {
         offsetClientY = 0;
@@ -209,8 +206,12 @@ export class VirtualScrollComponent implements OnInit {
         offsetClientY = this.scrollContainerHeight - this.rowHeight;
       }
     }
-    if (this.dragElement != null)
+
+    if (this.dragElement)
       this.renderer2.setStyle(this.dragElement, 'transform', 'translate3d(' + (this.horizontalDrag ? offsetClientX : 0) + 'px, ' + (this.verticalDrag ? offsetClientY : 0) + 'px, 0px)');
+
+    if (this.dragBorder)
+      this.setDragBorder();
   }
 
   @HostListener('document:mouseup', ['$event'])
@@ -223,51 +224,6 @@ export class VirtualScrollComponent implements OnInit {
     this.clearInterval(this.scrollInterval);
     this.removeDragElement();
     this.dragEnd.emit(this.reorderIndex);
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.previousStart = undefined;
-    this.previousEnd = undefined;
-    this.refresh();
-  }
-
-  ngOnDestroy() {
-    clearInterval(this.dragInterval);
-    this.onScrollListener();
-    this.onDragStartListener();
-    this.removeTouchListeners();
-  }
-
-  /**
-   * Scrolls to the specified index of the items array.
-   * 
-   * @param index {number} - index to scroll to
-   * @param size {number} - optional size in the event row height is known but size is not
-   * @param allowScrollDown {boolean} - optional, allow scrolling down direction
-   */
-  public scrollToIndex(index: number, size?: number, allowScrollDown?: boolean) {
-    let containerHeight = this.elementRef.nativeElement.clientHeight;
-    let contentHeight = !size ? size * this.rowHeight : this.size;
-
-    let scrollTop = index * this.rowHeight - (containerHeight - this.rowHeight);
-
-    if (allowScrollDown) {
-      scrollTop = scrollTop + contentHeight;
-    }
-    else if (scrollTop < 0 || scrollTop > contentHeight) {
-      scrollTop = 0;
-    }
-
-    jQuery(this.elementRef.nativeElement).animate({
-      scrollTop: scrollTop
-    }, 300);
-  }
-
-  /**
-   * Snaps scroll to the top.
-   */
-  public resetScrollTop() {
-    this.elementRef.nativeElement.scrollTop = 0;
   }
 
   /**
@@ -382,9 +338,29 @@ export class VirtualScrollComponent implements OnInit {
    */
   private scroll(direction: Direction) {
     let scrollTop = this.elementRef.nativeElement.scrollTop + (direction == Direction.Down ? 10 : -10);
-    if (scrollTop < 0 || scrollTop > this.elementRef.nativeElement.scrollHeight)
-      return;
+    if(scrollTop < 0) scrollTop = 0;
+    if(scrollTop > this.elementRef.nativeElement.scrollHeight) scrollTop = this.elementRef.nativeElement.scrollHeight;
     this.elementRef.nativeElement.scrollTop = scrollTop;
+  }
+
+  private setDragBorder() {
+    if (!this.reorderIndex) return;
+
+    if (this.reorderIndex.start == this.reorderIndex.end || this.reorderIndex.start == this.reorderIndex.target) {
+      this.renderer2.setStyle(this.dragBorderElement, 'visibility', 'hidden');
+      return;
+    }
+
+    let offsetHeight = this.reorderIndex.end * this.rowHeight;
+    let scrollTop = this.elementRef.nativeElement.scrollTop;
+    let offsetTop = offsetHeight - scrollTop;
+
+    if (this.reorderIndex.start < this.reorderIndex.end) {
+      offsetTop += this.rowHeight;
+    }
+
+    this.renderer2.setStyle(this.dragBorderElement, 'visibility', 'visible');
+    this.renderer2.setStyle(this.dragBorderElement, 'transform', 'translate3d(0px, ' + offsetTop + 'px, 0px)');
   }
 
   private removeDragElement() {
@@ -394,14 +370,15 @@ export class VirtualScrollComponent implements OnInit {
     this.renderer2.removeClass(this.dragElement, 'vs-drag-transit');
     this.dragElement = null;
     this.originalElement = null;
+    this.dragBorderElement = null;
   }
 
   private getDropIndex(point: any): void {
     if (!this.dragElement) return;
 
-    let dragOffsetTop = $(this.dragElement).offset().top;
-    let dragCenterY = dragOffsetTop + (this.rowHeight / 2);
-    let dragClientX = this.getDragElementClientX();
+    let dragOffsetTop = Math.round($(this.dragElement).offset().top);
+    let dragCenterY = Math.round(dragOffsetTop + (this.rowHeight / 2));
+    let dragClientX = Math.round(this.getDragElementClientX());
     let elements = this.elementsFromPoint(dragClientX, dragCenterY);
 
     let target;
@@ -448,6 +425,36 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   /**
+   * setInterval() alternative for using requestAnimationFrame for browser rendering.
+   * 
+   * @param fn 
+   * @param delay 
+   */
+  private requestInterval(fn: any, delay: number = 0) {
+    var start = Date.now();
+    var data: any = {};
+    data.id = this.ngZone.runOutsideAngular(() => {
+      return requestAnimationFrame(loop);
+    });
+    return data;
+    function loop() {
+      data.id = requestAnimationFrame(loop);
+      if (Date.now() - start >= delay) {
+        fn();
+        start = Date.now();
+      }
+    }
+  }
+
+  /**
+   * Clears the interval with cancelAnimationFrame().
+   */
+  private clearInterval(data) {
+    if (data == null || data.id == null) return;
+    cancelAnimationFrame(data.id);
+  }
+
+  /**
    * Returns a valid x coordinate that falls within the scroll container 
    * so we can return the correct elements from point.
    */
@@ -458,6 +465,38 @@ export class VirtualScrollComponent implements OnInit {
       return bounds.left;
     if (bounds.right >= this.scrollContainerLeft && bounds.right <= this.scrollContainerRight)
       return bounds.right;
+  }
+
+  /**
+   * Scrolls to the specified index of the items array.
+   * 
+   * @param index {number} - index to scroll to
+   * @param size {number} - optional size in the event row height is known but size is not
+   * @param allowScrollDown {boolean} - optional, allow scrolling down direction
+   */
+  public scrollToIndex(index: number, size?: number, allowScrollDown?: boolean) {
+    let containerHeight = this.elementRef.nativeElement.clientHeight;
+    let contentHeight = !size ? size * this.rowHeight : this.size;
+
+    let scrollTop = index * this.rowHeight - (containerHeight - this.rowHeight);
+
+    if (allowScrollDown) {
+      scrollTop = scrollTop + contentHeight;
+    }
+    else if (scrollTop < 0 || scrollTop > contentHeight) {
+      scrollTop = 0;
+    }
+
+    jQuery(this.elementRef.nativeElement).animate({
+      scrollTop: scrollTop
+    }, 300);
+  }
+
+  /**
+   * Snaps scroll to the top.
+   */
+  public resetScrollTop() {
+    this.elementRef.nativeElement.scrollTop = 0;
   }
 
   /**

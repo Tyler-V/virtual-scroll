@@ -1,4 +1,8 @@
     .container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         display: flex;
         .virtual-container {
             width: 100%;
@@ -24,10 +28,6 @@
                 height: 500px;
                 width: 400px;
                 border: 1px solid black;
-                .vs-drag-source {}
-                .vs-drag-transit {
-                    border: none !important;
-                }
                 .row {
                     display: flex;
                     align-content: flex-start;

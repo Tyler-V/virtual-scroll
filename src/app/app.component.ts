@@ -22,7 +22,7 @@ export class AppComponent {
   }
 
   numberWithCommas(n: number) {
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   dragEnd(index) {
