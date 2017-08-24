@@ -6,7 +6,7 @@
         <div class="header">
             Displaying {{vs.displayedItems}} rows ({{numberWithCommas(vs.index?.first + 1)}} - {{numberWithCommas(vs.index?.last)}}) of {{numberWithCommas(vs.size)}} items
         </div>
-        <virtual-scroll #vs [size]="items.length" [rowHeight]="50" (dragEnd)="dragEnd($event)">
+        <virtual-scroll #vs [size]="items.length" [rowHeight]="50" [draggable]="'drag-handle'" [dragBorder]="true" (dragEnd)="dragEnd($event)">
             <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end); let first = first;">
                 <div class="row" [style.background-color]="item.color" [class.first]="first">
                     <div class="item no-select">{{numberWithCommas(item.index)}}</div>
