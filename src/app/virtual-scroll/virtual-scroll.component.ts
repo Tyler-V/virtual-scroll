@@ -11,18 +11,18 @@ import {
 } from '@angular/core';
 
 /**
- * <virtual-scroll> is a component that will display the minimum amount of rows in a vertical list
- * using transclusion to display a large dataset in the most efficient manner possible.
- * 
- * Required:
- * 1. @Input() size: number - The amount of items in the array
- * 2. @Input() rowHeight: number - The minimum height of the row for displaying purposes
- * 3. You must specify a unique view child id (i.e. #vs) on the <virtual-scroll>
- * 
- * The rest is handled by the <virtual-scroll> component, it will apply the overflow properties and calculate
- * the height of the host container and fire an update event that will be consumed transclused (?) component
- * to splice the original array and display the current viewport.
- */
+* <virtual-scroll> is a component that will display the minimum amount of rows in a vertical list
+* using transclusion to display a large dataset in the most efficient manner possible.
+* 
+* Required:
+* 1. @Input() size: number - The amount of items in the array
+* 2. @Input() rowHeight: number - The minimum height of the row for displaying purposes
+* 3. You must specify a unique view child id (i.e. #vs) on the <virtual-scroll>
+* 
+* The rest is handled by the <virtual-scroll> component, it will apply the overflow properties and calculate
+* the height of the host container and fire an update event that will be consumed transclused (?) component
+* to splice the original array and display the current viewport.
+*/
 
 @Component({
   selector: 'virtual-scroll',
@@ -40,7 +40,7 @@ export class VirtualScrollComponent implements OnInit {
   /** Options */
   @Input() virtualPadding: number = 3; // How many additional virtual items should be padded to the top/bottom for visual/UI purposes
   @Input() draggable: string = 'drag'; // The class name of the layer that you want to become draggable on touch
-  @Input() dragBorder: boolean = true; // Styled by '.vs-drag-border' class
+  @Input() dragBorder: boolean = false; // Styled by '.vs-drag-border' class
   @Input() dragInsideContainer: boolean = true; // Restricts transit layer to remain inside the container
   @Input() verticalDrag: boolean = true; // Allows dragging the transit layer vertically
   @Input() horizontalDrag: boolean = false; // Allows dragging the transit layer horizontally
@@ -120,12 +120,12 @@ export class VirtualScrollComponent implements OnInit {
     this.lastTouch = this.getPoint(e);
     this.isDragging = true;
 
-    this.scrollContainerWidth = this.elementRef.nativeElement.clientWidth;
-    this.scrollContainerHeight = this.elementRef.nativeElement.clientHeight;
-    this.scrollContainerTop = $(this.elementRef.nativeElement).offset().top;
-    this.scrollContainerBottom = this.scrollContainerTop + this.scrollContainerHeight;
-    this.scrollContainerLeft = $(this.elementRef.nativeElement).offset().left;
-    this.scrollContainerRight = this.scrollContainerLeft + this.scrollContainerWidth;
+    this.scrollContainerWidth = Math.round(this.elementRef.nativeElement.clientWidth);
+    this.scrollContainerHeight = Math.round(this.elementRef.nativeElement.clientHeight);
+    this.scrollContainerTop = Math.round($(this.elementRef.nativeElement).offset().top);
+    this.scrollContainerBottom = Math.round(this.scrollContainerTop + this.scrollContainerHeight);
+    this.scrollContainerLeft = Math.round($(this.elementRef.nativeElement).offset().left);
+    this.scrollContainerRight = Math.round(this.scrollContainerLeft + this.scrollContainerWidth);
 
     this.originalElement = target;
     while (!this.dragElement) {
@@ -148,12 +148,15 @@ export class VirtualScrollComponent implements OnInit {
     this.renderer2.setStyle(this.dragElement, "box-shadow", "0px 7px 7px -4px rgba(0, 0, 0, 0.5)");
     this.transit.nativeElement.appendChild(this.dragElement);
 
-    let el = this.renderer2.createElement("div");
-    this.renderer2.addClass(el, "vs-drag-border");
-    this.renderer2.setStyle(el, "position", "absolute");
-    this.renderer2.setStyle(el, "width", "inherit");
-    this.renderer2.setStyle(el, "border-top", "2px solid red");
-    this.dragBorderElement = this.transit.nativeElement.appendChild(el);
+    if (this.dragBorder) {
+      let el = this.renderer2.createElement("div");
+      this.renderer2.addClass(el, "vs-drag-border");
+      this.renderer2.setStyle(el, "visibility", "hidden");
+      this.renderer2.setStyle(el, "position", "absolute");
+      this.renderer2.setStyle(el, "width", "inherit");
+      this.renderer2.setStyle(el, "border-top", "2px solid red");
+      this.dragBorderElement = this.transit.nativeElement.appendChild(el);
+    }
 
     this.initialOffsetX = this.lastTouch.clientX - $(this.originalElement).offset().left;
     this.initialOffsetY = this.lastTouch.clientY - $(this.originalElement).offset().top;
@@ -176,14 +179,18 @@ export class VirtualScrollComponent implements OnInit {
     if (!this.isDragging) return;
     let point = this.getPoint(e);
     if (this.lastTouch == point) return;
+
+    if (this.scrollInterval)
+      this.clearInterval(this.scrollInterval);
+
     this.lastTouch = this.getPoint(e);
     this.dragging.emit(this.reorderIndex);
     this.getDropIndex(this.lastTouch);
 
-    requestAnimationFrame(this.drag.bind(this));
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(this.drag.bind(this));
+    });
 
-    if (this.scrollInterval)
-      this.clearInterval(this.scrollInterval);
     let direction = this.getScrollDirection(this.lastTouch);
     if (direction != null) {
       this.scrollInterval = this.requestInterval(() => {
@@ -217,13 +224,14 @@ export class VirtualScrollComponent implements OnInit {
   @HostListener('document:mouseup', ['$event'])
   private onDragEnd(e: TouchEvent | MouseEvent) {
     if (!this.isDragging) return;
-    this.isDragging = false;
     if (this.originalElement) this.originalElement.style.cssText = this.cssText;
+    if (this.scrollInterval) this.clearInterval(this.scrollInterval);
     this.getDropIndex(this.getPoint(e));
-    this.removeTouchListeners();
-    this.clearInterval(this.scrollInterval);
-    this.removeDragElement();
     this.dragEnd.emit(this.reorderIndex);
+    this.removeTouchListeners();
+    this.removeDragElement();
+    this.reorderIndex = null;
+    this.isDragging = false;
   }
 
   /**
@@ -344,7 +352,7 @@ export class VirtualScrollComponent implements OnInit {
   }
 
   private setDragBorder() {
-    if (!this.reorderIndex) return;
+    if (!this.reorderIndex || !this.dragBorderElement) return;
 
     if (this.reorderIndex.start == this.reorderIndex.end || this.reorderIndex.start == this.reorderIndex.target) {
       this.renderer2.setStyle(this.dragBorderElement, 'visibility', 'hidden');
@@ -400,7 +408,7 @@ export class VirtualScrollComponent implements OnInit {
     // The row that the reordered row is dropped on
     this.reorderIndex.target = Array.from(this.contentElementRef.nativeElement.children).indexOf(target) + this.index.start;
 
-    let targetOffsetTop = $(target).offset().top
+    let targetOffsetTop = Math.round($(target).offset().top);
     let targetOffsetCenterY = targetOffsetTop + (this.rowHeight / 2) - this.scrollContainerTop;
     let dragOffsetCenterY = dragOffsetTop + (this.rowHeight / 2) - this.scrollContainerTop;
 
@@ -521,13 +529,13 @@ export class VirtualScrollComponent implements OnInit {
 }
 
 /**
- * first: the first visible row.
- * last: the last visible row.
- * start: the start index of the virtual array of an array of items. (This is the start of your array splice)
- * end: the end index of the virtual array of an array of items. (This is the end of your array splice)
- * target: the index in the virtual array that the reordered row is over.
- * accuracy: the % accuracy that the reordered row is over the target row. (100% is directly over, 90% - is 10% up or down from the center of the row.)
- */
+* first: the first visible row.
+* last: the last visible row.
+* start: the start index of the virtual array of an array of items. (This is the start of your array splice)
+* end: the end index of the virtual array of an array of items. (This is the end of your array splice)
+* target: the index in the virtual array that the reordered row is over.
+* accuracy: the % accuracy that the reordered row is over the target row. (100% is directly over, 90% - is 10% up or down from the center of the row.)
+*/
 export interface Index {
   first?: number; // Visible
   last?: number; // Visible
