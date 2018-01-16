@@ -1,18 +1,27 @@
 <div class="container">
-    <div class="virtual-container">
-        <div class="title">
-            Virtual Scroll
-        </div>
-        <div class="header">
-            Displaying {{vs.displayedItems}} rows ({{numberWithCommas(vs.index?.first + 1)}} - {{numberWithCommas(vs.index?.last)}}) of {{numberWithCommas(vs.size)}} items
-        </div>
-        <virtual-scroll #vs [size]="items.length" [rowHeight]="50" [draggable]="'drag-handle'" [dragBorder]="true" (dragEnd)="dragEnd($event)">
-            <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end); let first = first;">
-                <div class="row" [style.background-color]="item.color" [class.first]="first">
-                    <div class="item no-select">{{numberWithCommas(item.index)}}</div>
-                    <div class="drag-handle"></div>
-                </div>
-            </ng-container>
-        </virtual-scroll>
+  <div class="virtual-container">
+    <div class="title">
+      Virtual Scroll
     </div>
+    <div class="header">
+      Displaying {{vs.index?.last - vs.index?.first}} rows ({{numberWithCommas(vs.index?.first + 1)}} - {{numberWithCommas(vs.index?.last)}})
+      of {{numberWithCommas(vs.size)}} items
+    </div>
+    <virtual-scroll #vs [size]="items.length" [rowHeight]="50" [rowPadding]="10" [draggable]="'drag-handle'" [dragBorder]="true" (dragEnd)="dragEnd($event)">
+      <ng-container *ngFor="let item of items.slice(vs.index?.start, vs.index?.end); let first = first;">
+        <div class="row" [style.background-color]="item.color" [class.first]="first">
+          <div class="item no-select">{{numberWithCommas(item.index)}}</div>
+          <div class="drag-handle"></div>
+        </div>
+      </ng-container>
+    </virtual-scroll>
+  </div>
+  <div class="buttons">
+    <button class="scroll-to-top" (click)="vs.scrollToTop()">Scroll To Top</button>
+    <div class="scroll-to-index">
+      <input type="number" #index (keyup.enter)="vs.scrollToIndex(index.value)">
+      <button (click)="vs.scrollToIndex(index.value)">Scroll To Index</button>
+    </div>
+    <button class="scroll-to-bottom" (click)="vs.scrollToBottom()">Scroll To Bottom</button>
+  </div>
 </div>

@@ -1,18 +1,20 @@
 import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { VirtualScrollComponent } from './virtual-scroll/virtual-scroll.component';
+import { VirtualScrollModule } from './virtual-scroll/virtual-scroll.module';
 
 import * as $ from 'jquery';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    VirtualScrollComponent
+    AppComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    FormsModule,
+    VirtualScrollModule
   ],
   providers: [],
   bootstrap: [AppComponent]
